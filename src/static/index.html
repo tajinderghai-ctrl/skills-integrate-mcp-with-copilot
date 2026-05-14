@@ -39,6 +39,56 @@
         </form>
         <div id="message" class="hidden"></div>
       </section>
+
+      <section id="schedule-container">
+        <h3>Personal Schedule Planner</h3>
+        <div class="form-group">
+          <label for="schedule-email">Student Email:</label>
+          <input type="email" id="schedule-email" placeholder="your-email@mergington.edu" />
+        </div>
+        <button id="load-schedule">Load Schedule</button>
+
+        <div id="schedule-message" class="message hidden"></div>
+
+        <div id="schedule-view" class="hidden">
+          <h4>Your Schedule</h4>
+          <div id="schedule-list">
+            <!-- Schedule entries will be loaded here -->
+            <p>No schedule loaded yet.</p>
+          </div>
+
+          <h4>Add Schedule Entry</h4>
+          <form id="schedule-form">
+            <div class="form-group">
+              <label for="entry-title">Title:</label>
+              <input type="text" id="entry-title" required placeholder="Example: Biology Lesson" />
+            </div>
+            <div class="form-group">
+              <label for="entry-day">Day:</label>
+              <select id="entry-day" required>
+                <option value="">-- Select a day --</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="entry-time">Time:</label>
+              <input type="text" id="entry-time" required placeholder="Example: 3:30 PM - 4:30 PM" />
+            </div>
+            <div class="form-group">
+              <label>Category:</label>
+              <div class="radio-row">
+                <label><input type="radio" name="category" value="lesson" checked /> Lesson</label>
+                <label><input type="radio" name="category" value="extracurricular" /> Extracurricular</label>
+              </div>
+            </div>
+            <button type="submit">Add Entry</button>
+          </form>
+        </div>
+      </section>
     </main>
 
     <footer>

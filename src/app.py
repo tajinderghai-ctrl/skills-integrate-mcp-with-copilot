@@ -8,6 +8,7 @@ for extracurricular activities at Mergington High School.
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 import os
 from pathlib import Path
 
@@ -76,6 +77,77 @@ activities = {
         "participants": ["charlotte@mergington.edu", "henry@mergington.edu"]
     }
 }
+
+# In-memory student schedules database
+student_schedules = {
+    "michael@mergington.edu": [
+        {
+            "id": 1,
+            "day": "Monday",
+            "time": "2:00 PM - 3:00 PM",
+            "title": "Gym Class",
+            "category": "extracurricular"
+        },
+        {
+            "id": 2,
+            "day": "Tuesday",
+            "time": "3:30 PM - 4:30 PM",
+            "title": "Programming Class",
+            "category": "lesson"
+        }
+    ],
+    "emma@mergington.edu": [
+        {
+            "id": 1,
+            "day": "Thursday",
+            "time": "3:30 PM - 5:00 PM",
+            "title": "Art Club",
+            "category": "extracurricular"
+        }
+    ]
+}
+
+
+class ScheduleEntry(BaseModel):
+    day: str
+    time: str
+    title: str
+    category: str
+
+
+@app.get("/schedules/{email}")
+def get_schedule(email: str):
+    """Return the personal schedule for a given student email."""
+    return {
+        "email": email,
+        "schedule": student_schedules.get(email, [])
+    }
+
+
+@app.post("/schedules/{email}")
+def add_schedule_entry(email: str, entry: ScheduleEntry):
+    """Add a new schedule entry for a student."""
+    schedule = student_schedules.setdefault(email, [])
+    next_id = max((item["id"] for item in schedule), default=0) + 1
+    entry_data = entry.dict()
+    entry_data["id"] = next_id
+    schedule.append(entry_data)
+    return {"message": "Schedule entry added", "entry": entry_data}
+
+
+@app.delete("/schedules/{email}/{entry_id}")
+def delete_schedule_entry(email: str, entry_id: int):
+    """Delete a schedule entry for a student."""
+    schedule = student_schedules.get(email)
+    if not schedule:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    entry = next((item for item in schedule if item["id"] == entry_id), None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Schedule entry not found")
+
+    schedule.remove(entry)
+    return {"message": "Schedule entry deleted"}
 
 
 @app.get("/")

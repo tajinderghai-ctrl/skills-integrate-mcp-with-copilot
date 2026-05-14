@@ -164,6 +164,34 @@ button:hover {
   background-color: #3949ab;
 }
 
+.radio-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.schedule-entry {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #fafafa;
+}
+
+.schedule-entry p {
+  margin-top: 8px;
+  color: #555;
+}
+
+.schedule-entry button {
+  margin-top: 10px;
+  background-color: #c62828;
+}
+
+.schedule-entry button:hover {
+  background-color: #b71c1c;
+}
+
 .message {
   margin-top: 20px;
   padding: 10px;

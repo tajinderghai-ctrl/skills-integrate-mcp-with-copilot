@@ -3,6 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const scheduleEmailInput = document.getElementById("schedule-email");
+  const loadScheduleButton = document.getElementById("load-schedule");
+  const scheduleMessageDiv = document.getElementById("schedule-message");
+  const scheduleView = document.getElementById("schedule-view");
+  const scheduleList = document.getElementById("schedule-list");
+  const scheduleForm = document.getElementById("schedule-form");
 
   // Function to fetch activities from API
   async function fetchActivities() {
@@ -131,14 +137,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         messageDiv.textContent = result.message;
-        messageDiv.className = "success";
+        messageDiv.className = "message success";
         signupForm.reset();
 
         // Refresh activities list to show updated participants
         fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        messageDiv.className = "message error";
       }
 
       messageDiv.classList.remove("hidden");
@@ -149,9 +155,124 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 5000);
     } catch (error) {
       messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
+      messageDiv.className = "message error";
       messageDiv.classList.remove("hidden");
       console.error("Error signing up:", error);
+    }
+  });
+
+  function showScheduleMessage(message, status) {
+    scheduleMessageDiv.textContent = message;
+    scheduleMessageDiv.className = `message ${status}`;
+    scheduleMessageDiv.classList.remove("hidden");
+    setTimeout(() => {
+      scheduleMessageDiv.classList.add("hidden");
+    }, 5000);
+  }
+
+  function renderSchedule(email, schedule) {
+    scheduleList.innerHTML = "";
+    if (!schedule || schedule.length === 0) {
+      scheduleList.innerHTML = "<p>No scheduled entries yet.</p>";
+      return;
+    }
+
+    schedule
+      .sort((a, b) => a.day.localeCompare(b.day) || a.time.localeCompare(b.time))
+      .forEach((entry) => {
+        const entryCard = document.createElement("div");
+        entryCard.className = "schedule-entry";
+        entryCard.innerHTML = `
+          <strong>${entry.title}</strong>
+          <p>${entry.day} · ${entry.time} · ${entry.category}</p>
+          <button class="delete-schedule-entry" data-id="${entry.id}">Remove</button>
+        `;
+        scheduleList.appendChild(entryCard);
+      });
+
+    document.querySelectorAll(".delete-schedule-entry").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        const entryId = event.target.getAttribute("data-id");
+        const scheduleEmail = scheduleEmailInput.value.trim();
+
+        try {
+          const response = await fetch(
+            `/schedules/${encodeURIComponent(scheduleEmail)}/${encodeURIComponent(
+              entryId
+            )}`,
+            {
+              method: "DELETE",
+            }
+          );
+
+          const result = await response.json();
+          if (response.ok) {
+            showScheduleMessage(result.message, "success");
+            fetchSchedule(scheduleEmail);
+          } else {
+            showScheduleMessage(result.detail || "Failed to remove entry", "error");
+          }
+        } catch (error) {
+          showScheduleMessage("Failed to remove entry. Please try again.", "error");
+          console.error("Error deleting schedule entry:", error);
+        }
+      });
+    });
+  }
+
+  async function fetchSchedule(email) {
+    try {
+      const response = await fetch(`/schedules/${encodeURIComponent(email)}`);
+      const data = await response.json();
+      scheduleView.classList.remove("hidden");
+      renderSchedule(email, data.schedule);
+    } catch (error) {
+      showScheduleMessage("Failed to load schedule. Please try again.", "error");
+      console.error("Error fetching schedule:", error);
+    }
+  }
+
+  loadScheduleButton.addEventListener("click", () => {
+    const email = scheduleEmailInput.value.trim();
+    if (!email) {
+      showScheduleMessage("Please enter a student email.", "error");
+      return;
+    }
+    fetchSchedule(email);
+  });
+
+  scheduleForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = scheduleEmailInput.value.trim();
+    if (!email) {
+      showScheduleMessage("Please load a student schedule first.", "error");
+      return;
+    }
+
+    const title = document.getElementById("entry-title").value.trim();
+    const day = document.getElementById("entry-day").value;
+    const time = document.getElementById("entry-time").value.trim();
+    const category = document.querySelector(
+      'input[name="category"]:checked'
+    ).value;
+
+    try {
+      const response = await fetch(`/schedules/${encodeURIComponent(email)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, day, time, category }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        showScheduleMessage(result.message, "success");
+        scheduleForm.reset();
+        fetchSchedule(email);
+      } else {
+        showScheduleMessage(result.detail || "Failed to add entry", "error");
+      }
+    } catch (error) {
+      showScheduleMessage("Failed to add schedule entry. Please try again.", "error");
+      console.error("Error adding schedule entry:", error);
     }
   });
 
